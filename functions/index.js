@@ -28,8 +28,13 @@ exports.getProjects = functions.https.onRequest((req, res) => {
         .catch( err => res.status(500).json({error: err.code}) );
 });
 
+
 // Post Project
 exports.newProject = functions.https.onRequest((req, res) => {
+
+    if(req.body.title.trim() === '' || req.body.devHandle.trim() === '' ){
+        return res.status(400).json({ message: 'cannot be empty' })
+    }
 
     const newProject = {
         title: req.body.title,
@@ -47,3 +52,5 @@ exports.newProject = functions.https.onRequest((req, res) => {
         });
 });
 
+// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/socialape-0869b5867e5a.json"
+// request.time < timestamp.date(2019, 12, 12);
