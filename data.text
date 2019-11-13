@@ -1,0 +1,12 @@
+create project
+{
+	"title": "trash app project",
+	"devHandle": "dev1"
+}
+
+{
+	"email": "last@gmail.com",
+	"password": "123456",
+	"confirmPassword": "123456",
+	"handle": "Mr Last"
+}
