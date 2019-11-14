@@ -37,17 +37,49 @@ app.get('/projects', (req, res) => {
         return res.json(projects);
     })
     .catch( err => res.status(500).json({error: err.code}) );
-})
+});
+
+const DevAuth = (req, res, next) => {
+    let idToken;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')){
+        idToken = req.headers.authorization.split('Bearer ')[1];
+    };
+    // we need to verify if this token is from our app using firebase-admin.auth()
+
+    admin.auth()
+    .verifyIdToken(idToken)
+    .then( decodedToken =>{
+        req.developer = decodedToken;
+     return db.collection('developers').where('devId', '==', req.developer.uid)
+        .limit(1)
+        .get();
+    })
+    .then(data =>{
+        if (data){
+            req.developer.handle = data.docs[0].data().handle;
+        }else{
+            return res.status(500).json({error: 'Not existed in our database'})
+        }
+        return next();
+    })
+    .catch(err => {
+        console.error(err);
+        res.status(500).json({error: 'Error while verifying token'});
+    })
+}
+
+
 
 // Post Project
-app.post('/project', (req, res) => {
-    if(req.body.title.trim() === '' || req.body.devHandle.trim() === '' ){
+app.post('/project', DevAuth, (req, res) => {
+    if(req.body.title.trim() === '' ){
         return res.status(400).json({ message: 'cannot be empty' })
     }
 
     const newProject = {
         title: req.body.title,
-        devHandle: req.body.devHandle,
+        // devHandle: req.body.devHandle, no longer need the developer handle in the request body
+        devHandle: req.developer.handle,
         createdAt: new Date().toISOString()
     };
 
