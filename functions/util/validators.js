@@ -31,3 +31,15 @@ exports.validateSignupData = (devData) => {
         isValid: Object.keys(errors).length > 0 ? false : true
     }
 }
+
+
+exports.validateLoginData = (devData) => {
+    let errors = {};
+    if (isEmptyField(devData.email)) return errors.emailError = "Email cannot be empty";
+    if (isEmptyField(devData.password)) return errors.passwordError = "Please enter your password";
+
+    return{
+        errors,
+        isValid: Object.keys(errors).length > 0 ? false : true
+    }
+}

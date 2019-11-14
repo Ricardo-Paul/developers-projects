@@ -1,6 +1,8 @@
 const firebase = require('firebase');
 const {db} = require('../util/admin');
-const {validateSignupData} = require('../util/validators');
+const { config } = require('../util/config');
+
+const {validateSignupData, validateLoginData} = require('../util/validators');
 
 let devId, devToken;
 exports.signup =  (req, res) => {
@@ -34,6 +36,7 @@ exports.signup =  (req, res) => {
                     email: newDeveloper.email,
                     handle: newDeveloper.handle,
                     createdAt: new Date().toISOString(),
+                    imageUrl:  `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/blank-profile.png?alt=media`,
                     devId: devId
                   };
                  return db.collection('developers').doc(`${newDeveloper.handle}`).set(devCredentials);
@@ -46,4 +49,30 @@ exports.signup =  (req, res) => {
         if (err.code === 'auth/invalid-email') return res.status(400).json({error: "Wrong email format"});
         if (err.code === 'auth/email-already-in-use') return res.status(400).json({error: "Another the developer has already used this email"});
       });
+  };
+
+  exports.login = (req, res) =>{
+    devLoginData = {
+        email: req.body.email,
+        password: req.body.password
+    };
+
+    const {errors, isValid} = validateLoginData(devLoginData);
+    if (!isValid) return res.status(500).json(errors);
+
+    firebase.auth()
+        .signInWithEmailAndPassword(devLoginData.email, devLoginData.password)
+        .then(data => {
+            return data.user.getIdToken();
+        })
+        .then(loginToken => {
+            return res.json({loginToken})
+        })
+        .catch(err => {
+            if(err.code === 'auth/wrong-password'){
+                return res.status(403).json({error: 'Wrong credentials, please try again'});
+            };
+            console.error(err);
+            res.status(500).json({error: 'something went wrong'});
+        });
   };
