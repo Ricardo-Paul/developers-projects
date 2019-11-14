@@ -61,22 +61,48 @@ app.post('/project', (req, res) => {
         });
 });
 
+const isEmptyField = (string) => {
+    if(string.trim() === '') return true;
+    else return false;
+}
+
+const isValidEmail = (email) => {
+    const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (email.match(emailRegEx)) return true;
+    else return false;
+}
 
 // signup 
 let devId, devToken;
-
 app.post('/signup', (req, res) => {
+
     const newDeveloper = {
       email: req.body.email,
       password: req.body.password,
       confirmPassword: req.body.confirmPassword,
       handle: req.body.handle
     };
+
+    // Body data validation
+    // Validating Email
+    let errors = {};
+    if(isEmptyField(newDeveloper.email)){
+        errors.emailError = "Email must not be empty";
+    } else if(!isValidEmail){
+        errors.emailError = "Please provide a valid email address";
+    };
+
+    // Validating Password
+    if(isEmptyField(newDeveloper.password)) errors.passwordError = "Password cannot be empty";
+    if(newDeveloper.password !== newDeveloper.confirmPassword) errors.passwordError = "Passwords don't match";
+
+
+    if (Object.keys(errors).length > 0 ) return res.status(400).json(errors);
+
             firebase
             .auth()
             .createUserWithEmailAndPassword(newDeveloper.email, newDeveloper.password)
             .then((data) => {
-                // return res.status(201).json({message: ` Developer id: ${data.user.uid} created`})
                 devId = data.user.uid;
                 return data.user.getIdToken();
               })
@@ -89,8 +115,6 @@ app.post('/signup', (req, res) => {
                     createdAt: new Date().toISOString(),
                     devId: devId
                   };
-                //   Here we use the newDeveloper handle on authentication to create the developer
-                // document in the database
                  return db.collection('developers').doc(`${newDeveloper.handle}`).set(devCredentials);
               })
               .then(()=>{
@@ -98,10 +122,40 @@ app.post('/signup', (req, res) => {
               })
       .catch((err) => {
         console.error(err);
+        if (err.code === 'auth/invalid-email') return res.status(400).json({error: "Bad email format"});
+        if (err.code === 'auth/email-already-in-use') return res.status(400).json({error: "Another the developer has already used this email"});
       });
   });
 
-// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/socialape-bed783570d01.json"
+  
+  app.post('/login', (req, res) =>{
+    devLoginData = {
+        email: req.body.email,
+        password: req.body.password
+    }
+
+    let errors = {};
+    if (isEmptyField(devLoginData.email)) return errors.emailError = "Email cannot be empty";
+    if (isEmptyField(devLoginData.password)) return errors.passwordError = "Please enter your password";
+
+    firebase.auth()
+        .signInWithEmailAndPassword(devLoginData.email, devLoginData.password)
+        .then(data => {
+            return data.user.getIdToken();
+        })
+        .then(loginToken => {
+            return res.json({loginToken})
+        })
+        .catch(err => {
+            if(err.code === 'auth/wrong-password'){
+                return res.status(403).json({error: 'Wrong credentials, please try again'});
+            };
+            console.error(err);
+            res.status(500).json({error: 'something went wrong'});
+        });
+  })
+
+// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/developers-558666438ebc.json"
 // request.time < timestamp.date(2019, 12, 12);
 
 exports.api = functions.https.onRequest(app);
