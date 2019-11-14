@@ -1,12 +1,11 @@
+const {admin, db} = require('./util/admin')
+
 const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-admin.initializeApp();
-
 const app = require('express')();
-const db = admin.firestore();
 
+
+// Adding firebase for auth
 const firebase = require('firebase');
-
 var config = {
     apiKey: "AIzaSyBd3G2ViDG1HPJBdPFcA8wXeNllQnhMOR4",
     authDomain: "developers-9160b.firebaseapp.com",
@@ -17,27 +16,13 @@ var config = {
     appId: "1:499686252076:web:a890fc8c6d78c08d6a3b89",
     measurementId: "G-TZYKGQTPY4"
   };
-
   firebase.initializeApp(config);
 
-//  Get Projects
-app.get('/projects', (req, res) => {
-    db.collection('projects')
-    .orderBy('createdAt', 'desc')
-    .get()
-    .then((data) => {
-        let projects = [];
-        data.forEach( doc => {
-            projects.push({
-                title: doc.data().title,
-                devHandle: doc.data().devHandle,
-                createdAt: doc.data().createdAt
-            })
-        });
-        return res.json(projects);
-    })
-    .catch( err => res.status(500).json({error: err.code}) );
-});
+//   Projets imports
+const {fetchProjects, addProject} = require('./handlers/projects');
+
+// Developpers imports
+const {signup} = require('./handlers/developers');
 
 const DevAuth = (req, res, next) => {
     let idToken;
@@ -66,32 +51,19 @@ const DevAuth = (req, res, next) => {
         console.error(err);
         res.status(500).json({error: 'Error while verifying token'});
     })
-}
+};
 
 
 
-// Post Project
-app.post('/project', DevAuth, (req, res) => {
-    if(req.body.title.trim() === '' ){
-        return res.status(400).json({ message: 'cannot be empty' })
-    }
 
-    const newProject = {
-        title: req.body.title,
-        // devHandle: req.body.devHandle, no longer need the developer handle in the request body
-        devHandle: req.developer.handle,
-        createdAt: new Date().toISOString()
-    };
 
-    db.collection('projects').add(newProject)
-        .then(doc => {
-            res.json({ message: `document ${doc.id} created with success`});
-        })
-        .catch(err => {
-            console.error(err)
-            res.status(500).json({error: 'creation failed' });
-        });
-});
+// Project routes
+app.get('/projects', fetchProjects );
+app.post('/project', DevAuth, addProject );
+
+
+// Developer routes
+
 
 const isEmptyField = (string) => {
     if(string.trim() === '') return true;
@@ -106,58 +78,7 @@ const isValidEmail = (email) => {
 
 // signup 
 let devId, devToken;
-app.post('/signup', (req, res) => {
-
-    const newDeveloper = {
-      email: req.body.email,
-      password: req.body.password,
-      confirmPassword: req.body.confirmPassword,
-      handle: req.body.handle
-    };
-
-    // Body data validation
-    // Validating Email
-    let errors = {};
-    if(isEmptyField(newDeveloper.email)){
-        errors.emailError = "Email must not be empty";
-    } else if(!isValidEmail){
-        errors.emailError = "Please provide a valid email address";
-    };
-
-    // Validating Password
-    if(isEmptyField(newDeveloper.password)) errors.passwordError = "Password cannot be empty";
-    if(newDeveloper.password !== newDeveloper.confirmPassword) errors.passwordError = "Passwords don't match";
-
-
-    if (Object.keys(errors).length > 0 ) return res.status(400).json(errors);
-
-            firebase
-            .auth()
-            .createUserWithEmailAndPassword(newDeveloper.email, newDeveloper.password)
-            .then((data) => {
-                devId = data.user.uid;
-                return data.user.getIdToken();
-              })
-              .then((token) =>{
-                  devToken = token;
-
-                  const devCredentials = {
-                    email: newDeveloper.email,
-                    handle: newDeveloper.handle,
-                    createdAt: new Date().toISOString(),
-                    devId: devId
-                  };
-                 return db.collection('developers').doc(`${newDeveloper.handle}`).set(devCredentials);
-              })
-              .then(()=>{
-                  return res.json(devToken);
-              })
-      .catch((err) => {
-        console.error(err);
-        if (err.code === 'auth/invalid-email') return res.status(400).json({error: "Bad email format"});
-        if (err.code === 'auth/email-already-in-use') return res.status(400).json({error: "Another the developer has already used this email"});
-      });
-  });
+app.post('/signup', signup);
 
   
   app.post('/login', (req, res) =>{
