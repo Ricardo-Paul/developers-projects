@@ -26,13 +26,24 @@ exports.addProject = (req, res) => {
     const newProject = {
         title: req.body.title,
         // devHandle: req.body.devHandle, no longer need the developer handle in the request body
+        imageUrl: req.developer.imageUrl,
         devHandle: req.developer.handle,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+
+        collaboratorCount: 0,
+        suggestionCount: 0
     };
 
+    // not mandatory field
+    if(req.body.overview) newProject.overview = req.body.overview;
+    if(req.body.techStacks) newProject.techStacks = req.body.techStacks;
+    if(req.body.gitLink) newProject.gitLink = req.body.gitLink;
+    if(req.body.help) newProject.help = req.body.help;
+    
     db.collection('projects').add(newProject)
         .then(doc => {
-            res.json({ message: `document ${doc.id} created with success`});
+            newProject.projectId = doc.id;
+            res.json(newProject);
         })
         .catch(err => {
             console.error(err)
@@ -89,4 +100,12 @@ exports.addSuggestion = (req, res) => {
         .catch(err => {
             console.error(err);
         });
+};
+
+exports.joinTeam = (req, res) => {
+
+}
+
+exports.leaveTeam = (req, res) => {
+
 };

@@ -34,14 +34,20 @@ developer
 	location
 		imageUrl
 
-
 Project
+	devHandle
 	createdAt
 	Title
+
 	Overview
 	Help
 	Tech Stacks
 	GitHub link
+
+	partnersCount:
+	suggestionsCount:
+
+
 
 (join) Join project team
 
@@ -50,7 +56,7 @@ Suggestions
 	devHandle 
 	projectId
 	content
-	
+
 	createdAt
 
 

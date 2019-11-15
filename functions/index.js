@@ -13,7 +13,7 @@ const { config } = require('./util/config')
 const { uploadImage } = require('./handlers/image');
 
 //   Projets imports
-const {fetchProjects, addProject, fetchOneProject, addSuggestion} = require('./handlers/projects');
+const {fetchProjects, addProject, fetchOneProject, addSuggestion, joinTeam, leaveTeam} = require('./handlers/projects');
 
 // Developpers imports
 const {signup, login, addExtraDetails, fetchDevAccount } = require('./handlers/developers');
@@ -60,6 +60,10 @@ app.post('/project', DevAuth, addProject );
 
 app.get('/project/:projectId', fetchOneProject);
 app.post('/project/:projectId/suggestion', DevAuth, addSuggestion);
+
+app.get('/project/:projectId/join', DevAuth, joinTeam);
+app.get('/project/:projectId/leave', DevAuth, leaveTeam);
+
 
 // Developer routes
 app.post('/signup', signup);
