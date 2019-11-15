@@ -2,7 +2,7 @@ const firebase = require('firebase');
 const {db} = require('../util/admin');
 const { config } = require('../util/config');
 
-const {validateSignupData, validateLoginData} = require('../util/validators');
+const {validateSignupData, validateLoginData, reduceExtraDetails} = require('../util/validators');
 
 let devId, devToken;
 exports.signup =  (req, res) => {
@@ -76,3 +76,39 @@ exports.signup =  (req, res) => {
             res.status(500).json({error: 'something went wrong'});
         });
   };
+
+
+  exports.addExtraDetails = (req, res) => {
+    let extraDetails = reduceExtraDetails(req.body);
+    db.doc(`/developers/${req.developer.handle}`).update(extraDetails)
+        .then(()=>{
+           return res.json({ message: 'Profile updated'});
+        })
+        .catch(err => {
+            console.error(err);
+        })
+  };
+
+  exports.fetchDevAccount = (req, res) => {
+      let devAccountDetails = {};
+      db.doc(`/developers/${req.developer.handle}`).get()
+        .then( doc => {
+            if (doc.exists){
+                devAccountDetails = doc.data();
+            } else {
+                return res.status(404).json({ message: 'Account not found'});
+            }
+            return db.collection('contributors').where('devHandle', '==', req.developer.handle ).get()
+        })
+        .then( data => {
+            devAccountDetails.contributors = [];
+            data.forEach(doc => {
+                devAccountDetails.contributors.push(doc.data())
+            });
+            return res.json(devAccountDetails);
+        })
+        .catch(err => {
+            console.error(err);
+        });
+  };
+
