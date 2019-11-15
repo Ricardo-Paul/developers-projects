@@ -13,7 +13,7 @@ const { config } = require('./util/config')
 const { uploadImage } = require('./handlers/image');
 
 //   Projets imports
-const {fetchProjects, addProject, fetchOneProject} = require('./handlers/projects');
+const {fetchProjects, addProject, fetchOneProject, addSuggestion} = require('./handlers/projects');
 
 // Developpers imports
 const {signup, login, addExtraDetails, fetchDevAccount } = require('./handlers/developers');
@@ -36,6 +36,7 @@ const DevAuth = (req, res, next) => {
     .then(data =>{
         if (data){
             req.developer.handle = data.docs[0].data().handle;
+            req.developer.imageUrl = data.docs[0].data().imageUrl;
         }else{
             return res.status(500).json({error: 'Not existed in our database'})
         }
@@ -51,12 +52,14 @@ const DevAuth = (req, res, next) => {
 
 
 
+
+
 // Project routes
 app.get('/projects', fetchProjects );
 app.post('/project', DevAuth, addProject );
 
 app.get('/project/:projectId', fetchOneProject);
-
+app.post('/project/:projectId/suggestion', DevAuth, addSuggestion);
 
 // Developer routes
 app.post('/signup', signup);

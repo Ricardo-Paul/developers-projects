@@ -48,7 +48,9 @@ exports.fetchOneProject = (req, res) => {
             projectData = doc.data();
             projectData.projectId = doc.id;
         };
-        return db.collection('suggestions').where('projectId', '==', req.params.projectId).get();
+        return db.collection('suggestions')
+        .orderBy('createdAt', 'desc')
+        .where('projectId', '==', req.params.projectId).get();
      })
      .then(data =>{
          projectData.suggestions = [];
@@ -60,4 +62,31 @@ exports.fetchOneProject = (req, res) => {
      .catch(err => {
          console.error(err);
      })
-}
+};
+
+
+exports.addSuggestion = (req, res) => {
+    if (req.body.content == '') return res.status(500).json({error: 'Please provide a suggestion'});
+
+    let newSuggestion = {
+        devHandle: req.developer.handle,
+        projectId: req.params.projectId,
+        content: req.body.content,
+        createdAt: new Date().toISOString(),
+        imageUrl: req.developer.imageUrl
+    };
+
+    db.doc(`/projects/${req.params.projectId}`).get()
+        .then(doc => {
+            if(!doc.exists){
+                return res.status(404).json({ error: 'project not found'});
+            }
+            return db.collection('suggestions').add(newSuggestion);
+        })
+        .then(() => {
+            res.json(newSuggestion);
+        })
+        .catch(err => {
+            console.error(err);
+        });
+};
