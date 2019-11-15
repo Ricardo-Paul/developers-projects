@@ -47,6 +47,5 @@ exports.uploadImage = (req, res) => {
             console.error(err);
         });
     });
-
     busboy.end(req.rawBody);
-}
+};

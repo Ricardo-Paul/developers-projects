@@ -38,4 +38,26 @@ exports.addProject = (req, res) => {
             console.error(err)
             res.status(500).json({error: 'creation failed' });
         });
+};
+
+exports.fetchOneProject = (req, res) => {
+    let projectData = {};
+    db.doc(`/projects/${req.params.projectId}`).get()
+     .then(doc => {
+        if(doc.exists){
+            projectData = doc.data();
+            projectData.projectId = doc.id;
+        };
+        return db.collection('suggestions').where('projectId', '==', req.params.projectId).get();
+     })
+     .then(data =>{
+         projectData.suggestions = [];
+         data.forEach(doc => {
+             projectData.suggestions.push(doc.data());
+         });
+         res.json(projectData);
+     })
+     .catch(err => {
+         console.error(err);
+     })
 }

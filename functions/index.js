@@ -13,10 +13,10 @@ const { config } = require('./util/config')
 const { uploadImage } = require('./handlers/image');
 
 //   Projets imports
-const {fetchProjects, addProject} = require('./handlers/projects');
+const {fetchProjects, addProject, fetchOneProject} = require('./handlers/projects');
 
 // Developpers imports
-const {signup, login } = require('./handlers/developers');
+const {signup, login, addExtraDetails, fetchDevAccount } = require('./handlers/developers');
 
 const DevAuth = (req, res, next) => {
     let idToken;
@@ -55,15 +55,18 @@ const DevAuth = (req, res, next) => {
 app.get('/projects', fetchProjects );
 app.post('/project', DevAuth, addProject );
 
+app.get('/project/:projectId', fetchOneProject);
+
 
 // Developer routes
 app.post('/signup', signup);
 app.post('/login', login );
+
 app.post('/developer/image', DevAuth, uploadImage);
+app.post('/developer', DevAuth, addExtraDetails);
+app.get('/developer', DevAuth, fetchDevAccount );
 
-
-
-// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/developers-558666438ebc.json"
+// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/developers-c75a6f368a97.json"
 // request.time < timestamp.date(2019, 12, 12);
 
 exports.api = functions.https.onRequest(app);

@@ -16,3 +16,47 @@ create project
 	"email": "dev4@gmail.com",
 	"password": "123456"
 }
+
+
+Let us know what you're building and let's build it together
+
+
+
+developer
+	handle
+	email
+	devId
+	createdAt
+
+	bio:
+	company
+	website
+	location
+		imageUrl
+
+
+Project
+	createdAt
+	Title
+	Overview
+	Help
+	Tech Stacks
+	GitHub link
+
+(join) Join project team
+
+
+Suggestions
+	devHandle 
+	projectId
+	content
+	
+	createdAt
+
+
+User
+	signup
+		email
+		password
+		confirmPassword
+		handle
