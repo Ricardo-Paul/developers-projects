@@ -13,7 +13,7 @@ const { config } = require('./util/config')
 const { uploadImage } = require('./handlers/image');
 
 //   Projets imports
-const {fetchProjects, addProject, fetchOneProject, addSuggestion, joinTeam, leaveTeam} = require('./handlers/projects');
+const {fetchProjects, addProject, fetchOneProject, addSuggestion, joinTeam, leaveTeam, deleteProject} = require('./handlers/projects');
 
 // Developpers imports
 const {signup, login, addExtraDetails, fetchDevAccount } = require('./handlers/developers');
@@ -63,7 +63,7 @@ app.post('/project/:projectId/suggestion', DevAuth, addSuggestion);
 
 app.get('/project/:projectId/join', DevAuth, joinTeam);
 app.get('/project/:projectId/leave', DevAuth, leaveTeam);
-
+app.delete('/project/:projectId/delete', DevAuth, deleteProject);
 
 // Developer routes
 app.post('/signup', signup);
@@ -73,7 +73,7 @@ app.post('/developer/image', DevAuth, uploadImage);
 app.post('/developer', DevAuth, addExtraDetails);
 app.get('/developer', DevAuth, fetchDevAccount );
 
-// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/developers-c75a6f368a97.json"
+// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/developers-6e20ff46cbec.json"
 // request.time < timestamp.date(2019, 12, 12);
 
 exports.api = functions.https.onRequest(app);

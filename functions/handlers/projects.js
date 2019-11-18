@@ -94,7 +94,7 @@ exports.addSuggestion = (req, res) => {
             return doc.ref.update({ suggestionCount: doc.data().suggestionCount + 1 });
         })
         .then(()=> {
-            db.collection('suggestions').add({newSuggestion})
+            db.collection('suggestions').add({newSuggestion});
         })
         .then(() => {
             res.json(newSuggestion);
@@ -178,3 +178,25 @@ projectDocument.get()
 };
 
 
+
+
+exports.deleteProject = (req, res) => {
+    const projectDocument = db.doc(`/projects/${req.params.projectId}`);
+    projectDocument.get()
+    .then(doc => {
+        if(!doc.exists){
+           return res.status(404).json({ error: 'project not found'});
+        }
+        if(doc.data().devHandle !== req.developer.handle){
+           return res.status(500).json({error: 'deletion attempt revoked'});
+        }
+        projectDocument.delete();
+    })
+    .then(() => {
+        return res.json({message: 'Project deleted successfully'});
+    })
+    .catch(err => {
+        console.error(err);
+        res.status(500).json({error: err.code})
+    })
+}
