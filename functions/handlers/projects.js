@@ -91,7 +91,10 @@ exports.addSuggestion = (req, res) => {
             if(!doc.exists){
                 return res.status(404).json({ error: 'project not found'});
             }
-            return db.collection('suggestions').add(newSuggestion);
+            return doc.ref.update({ suggestionCount: doc.data().suggestionCount + 1 });
+        })
+        .then(()=> {
+            db.collection('suggestions').add({newSuggestion})
         })
         .then(() => {
             res.json(newSuggestion);
