@@ -49,11 +49,6 @@ const DevAuth = (req, res, next) => {
 };
 
 
-
-
-
-
-
 // Project routes
 app.get('/projects', fetchProjects );
 app.post('/project', DevAuth, addProject );
@@ -75,5 +70,70 @@ app.get('/developer', DevAuth, fetchDevAccount );
 
 // export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/developers-6e20ff46cbec.json"
 // request.time < timestamp.date(2019, 12, 12);
+
+
+
+exports.createNotificationOnJoin = functions.region('us-central1').firestore.document('contributors/{id}')
+.onCreate((snapshot) => {
+    db.doc(`/projects/${snapshot.data().projectId}`).get()
+    .then(doc => {
+        if(doc.exists){
+            return db.doc(`/notifications/${snapshot.id}`).set({
+                createdAt: new Date().toISOString(),
+                recipient: doc.data().devHandle,
+                sender: snapshot.data().devHandle,
+            
+                type: 'join',
+                read: false,
+                projectId: doc.id
+            })
+        }
+    })
+    .then (() => {
+        return;
+    })
+    .catch(err => {
+        console.error(err)
+        return;
+    })
+})
+
+exports.createNotificationOnSuggestion = functions.region('us-central1').firestore.document('suggestions/{id}')
+.onCreate((snapshot) => {
+    db.doc(`/projects/${snapshot.data().projectId}`).get()
+    .then(doc => {
+        if(doc.exists){
+            return db.doc(`/notifications/${snapshot.id}`).add({
+                createdAt: new Date().toISOString(),
+                recipient: doc.data().devHandle,
+                sender: snapshot.data().devHandle,
+            
+                type: 'suggestion',
+                read: false,
+                projectId: doc.id
+            })
+        }
+    })
+    .then (() => {
+        return;
+    })
+    .catch(err => {
+        console.error(err)
+        return;
+    })
+})
+
+exports.deleteNotificationOnLeave = functions.region('us-central1').firestore.document('contributors/{id}')
+.onDelete((snapshot) => {
+    db.doc(`/notifications/${snapshot.id}`).delete()
+    .then(() => {
+        return;
+    })
+    .catch(err => {
+        console.error(err)
+    });
+})
+
+
 
 exports.api = functions.https.onRequest(app);
