@@ -140,5 +140,38 @@ exports.joinTeam = (req, res) => {
 }
 
 exports.leaveTeam = (req, res) => {
+    let contributorDocument = db.collection('contributors').where('devHandle', '==', req.developer.handle)
+    .where('projectId', '==', req.params.projectId).limit(1)
 
+let projectDocument = db.doc(`/projects/${req.params.projectId}`);
+
+let projectData;
+
+projectDocument.get()
+.then( doc => {
+    if(doc.exists){
+        projectData = doc.data();
+        projectData.projectId = doc.id;
+        return contributorDocument.get()
+    }
+})
+.then(data =>{
+    if(data.empty){
+       return res.json({message: 'You\'re not part of this project'})
+    } else {
+        return db.doc(`/contributors/${data.docs[0].id}`).delete()
+            .then(() => {
+                projectData.contributorCount--;
+               return projectDocument.update({contributorCount: projectData.contributorCount});
+            })
+            .then(()=>{
+                return res.json(projectData);
+            })
+    }
+})
+.catch(err => {
+    console.error(err)
+})
 };
+
+
