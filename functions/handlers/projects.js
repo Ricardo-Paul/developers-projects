@@ -22,7 +22,6 @@ exports.addProject = (req, res) => {
     if(req.body.title.trim() === '' ){
         return res.status(400).json({ message: 'cannot be empty' })
     }
-
     const newProject = {
         title: req.body.title,
         // devHandle: req.body.devHandle, no longer need the developer handle in the request body
@@ -30,7 +29,7 @@ exports.addProject = (req, res) => {
         devHandle: req.developer.handle,
         createdAt: new Date().toISOString(),
 
-        collaboratorCount: 0,
+        contributorCount: 0,
         suggestionCount: 0
     };
 
@@ -103,7 +102,41 @@ exports.addSuggestion = (req, res) => {
 };
 
 exports.joinTeam = (req, res) => {
+   let contributorDocument = db.collection('contributors').where('devHandle', '==', req.developer.handle)
+        .where('projectId', '==', req.params.projectId).limit(1)
 
+   let projectDocument = db.doc(`/projects/${req.params.projectId}`);
+
+   let projectData;
+   
+   projectDocument.get()
+    .then( doc => {
+        if(doc.exists){
+            projectData = doc.data();
+            projectData.projectId = doc.id;
+            return contributorDocument.get()
+        }
+    })
+    .then(data =>{
+        if(data.empty){
+           return db.collection('contributors').add({
+                devHandle: req.developer.handle,
+                projectId: req.params.projectId
+            })
+            .then ( () =>{
+                projectData.contributorCount++;
+                return projectDocument.update( {contributorCount: projectData.contributorCount});
+            })
+            .then(()=>{
+                return res.json(projectData);
+            })
+        } else {
+            return res.status(500).json({message: 'You\'re already collaborating on this project'});
+        }
+    })
+    .catch(err => {
+        console.error(err)
+    })
 }
 
 exports.leaveTeam = (req, res) => {
