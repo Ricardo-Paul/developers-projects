@@ -123,7 +123,18 @@ exports.getDeveloperDetails = (req, res) =>{
 
 
 exports.markNotificationsRead = (req, res) => {
-
+    let batch = db.batch();
+    req.body.forEach(notificationId => {
+        const notifications = db.doc(`/notifications/${notificationId}`);
+        batch.update(notifications, {read: true} )
+    });
+    batch.commit()
+        .then( () => {
+            res.json({message: 'All notifications are read'});
+        })
+        .catch(err => {
+            console.error(err);
+        })
 }
 
   exports.fetchDevAccount = (req, res) => {
