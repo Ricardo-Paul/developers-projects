@@ -146,8 +146,9 @@ exports.onDeveloperImageChange = functions.firestore.document('/developers/{deve
 
 exports.onProjectDelete = functions.firestore.document('/projects/{projectId}').onDelete(
     (snapshot, context) => {
+            const projectId = context.params.projectId;
          const batch = db.batch();
-         return db.collection('suggestions').where('projectId', '==', projectId ).get()
+         return db.collection('suggestions').where('projectId', '==', projectId).get()
             .then(data => {
                 data.forEach(doc => {
                     const suggestion = db.doc(`/suggestions/${doc.id}`)
@@ -171,6 +172,6 @@ exports.onProjectDelete = functions.firestore.document('/projects/{projectId}').
             })
             .catch(err => console.error(err) );
     }
-)
+);
 
 exports.api = functions.https.onRequest(app);
