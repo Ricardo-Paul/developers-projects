@@ -16,7 +16,7 @@ const { uploadImage } = require('./handlers/image');
 const {fetchProjects, addProject, fetchOneProject, addSuggestion, joinTeam, leaveTeam, deleteProject} = require('./handlers/projects');
 
 // Developpers imports
-const {signup, login, addExtraDetails, fetchDevAccount } = require('./handlers/developers');
+const {signup, login, addExtraDetails, fetchDevAccount, getDeveloperDetails, markNotificationsRead } = require('./handlers/developers');
 
 const DevAuth = (req, res, next) => {
     let idToken;
@@ -68,7 +68,11 @@ app.post('/developer/image', DevAuth, uploadImage);
 app.post('/developer', DevAuth, addExtraDetails);
 app.get('/developer', DevAuth, fetchDevAccount );
 
-// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/developers-6e20ff46cbec.json"
+// additonal backend routes
+app.get('/developer/:devHandle', getDeveloperDetails);
+app.post('/notifications', DevAuth, markNotificationsRead);
+
+// export GOOGLE_APPLICATION_CREDENTIALS="/home/ricardo/Videos/React Social/developers-583454dd32cc.json"
 // request.time < timestamp.date(2019, 12, 12);
 
 

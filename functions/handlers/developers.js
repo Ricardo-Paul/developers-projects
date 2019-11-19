@@ -89,6 +89,43 @@ exports.signup =  (req, res) => {
         })
   };
 
+// Get any developer details
+exports.getDeveloperDetails = (req, res) =>{
+    let developerDetails = {};
+    db.doc(`/developers/${req.params.devHandle}`).get()
+        .then(doc =>{
+            if(doc.exists){
+                developerDetails.developer = doc.data();
+                return db.collection('projects').where('devHandle', '==', req.params.devHandle).get();
+            } else {
+                return res.status(500).json({ error: 'Developer account not found'});
+            }
+        })
+        .then(data => {
+            developerDetails.projects = [];
+            data.forEach(doc => {
+                developerDetails.projects.push({
+                    title: doc.data().title,
+                    createdAt: doc.data().createdAt,
+                    developer: doc.data().developer,
+                    imageUrl: doc.data().imageUrl,
+                    contributorCount: doc.data().contributorCount,
+                    suggestionCount: doc.data().suggestionCount,
+                    projectId: doc.data().projectId
+                })
+            });
+            return res.json(developerDetails);
+        })
+        .catch(err => {
+            console.error(err);
+        })
+};
+
+
+exports.markNotificationsRead = (req, res) => {
+
+}
+
   exports.fetchDevAccount = (req, res) => {
       let devAccountDetails = {};
       db.doc(`/developers/${req.developer.handle}`).get()
