@@ -8,9 +8,18 @@ exports.fetchProjects = (req, res) => {
         let projects = [];
         data.forEach( doc => {
             projects.push({
+                projectId: doc.id,
                 title: doc.data().title,
+                imageUrl: doc.data().imageUrl,
                 devHandle: doc.data().devHandle,
-                createdAt: doc.data().createdAt
+                createdAt: doc.data().createdAt,
+
+                contributorCount: doc.data().contributorCount,
+                suggestionCount: doc.data().suggestionCount,
+
+                overview: doc.data().overview,
+                help: doc.data().help,
+                gitLink: doc.data().gitLink
             })
         });
         return res.json(projects);
@@ -76,7 +85,7 @@ exports.fetchOneProject = (req, res) => {
 
 
 exports.addSuggestion = (req, res) => {
-    if (req.body.content == '') return res.status(500).json({error: 'Please provide a suggestion'});
+    if (req.body.content == '') return res.status(500).json({suggestion: 'Please provide a suggestion'});
 
     let newSuggestion = {
         devHandle: req.developer.handle,

@@ -31,7 +31,6 @@ exports.signup =  (req, res) => {
               })
               .then((token) =>{
                   devToken = token;
-
                   const devCredentials = {
                     email: newDeveloper.email,
                     handle: newDeveloper.handle,
@@ -48,6 +47,7 @@ exports.signup =  (req, res) => {
         console.error(err);
         if (err.code === 'auth/invalid-email') return res.status(400).json({error: "Wrong email format"});
         if (err.code === 'auth/email-already-in-use') return res.status(400).json({error: "Another the developer has already used this email"});
+        return res.json({general: 'something went wrong, please try agin'})
       });
   };
 

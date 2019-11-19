@@ -79,47 +79,37 @@ app.post('/notifications', DevAuth, markNotificationsRead);
 
 exports.createNotificationOnJoin = functions.region('us-central1').firestore.document('contributors/{id}')
 .onCreate((snapshot) => {
-    db.doc(`/projects/${snapshot.data().projectId}`).get()
+    return db.doc(`/projects/${snapshot.data().projectId}`).get()
     .then(doc => {
-        if(doc.exists){
+        if(doc.exists && doc.data().devHandle !== snapshot.data().devHandle ){
             return db.doc(`/notifications/${snapshot.id}`).set({
                 createdAt: new Date().toISOString(),
                 recipient: doc.data().devHandle,
                 sender: snapshot.data().devHandle,
-            
                 type: 'join',
                 read: false,
                 projectId: doc.id
             })
         }
     })
-    .then (() => {
-        return;
-    })
-    .catch(err => {
-        console.error(err)
-        return;
-    })
-})
+    .catch(err => 
+        console.error(err));
+});
 
 exports.createNotificationOnSuggestion = functions.region('us-central1').firestore.document('suggestions/{id}')
 .onCreate((snapshot) => {
-    db.doc(`/projects/${snapshot.data().projectId}`).get()
+   return db.doc(`/projects/${snapshot.data().projectId}`).get()
     .then(doc => {
-        if(doc.exists){
+        if(doc.exists && doc.data().devHandle !== snapshot.data().devHandle){
             return db.doc(`/notifications/${snapshot.id}`).add({
                 createdAt: new Date().toISOString(),
                 recipient: doc.data().devHandle,
                 sender: snapshot.data().devHandle,
-            
                 type: 'suggestion',
                 read: false,
                 projectId: doc.id
             })
         }
-    })
-    .then (() => {
-        return;
     })
     .catch(err => {
         console.error(err)
@@ -129,15 +119,58 @@ exports.createNotificationOnSuggestion = functions.region('us-central1').firesto
 
 exports.deleteNotificationOnLeave = functions.region('us-central1').firestore.document('contributors/{id}')
 .onDelete((snapshot) => {
-    db.doc(`/notifications/${snapshot.id}`).delete()
-    .then(() => {
-        return;
-    })
+  return db.doc(`/notifications/${snapshot.id}`).delete()
     .catch(err => {
         console.error(err)
     });
 })
 
+// change projects imageUrl when developers imageUrl is changed
+exports.onDeveloperImageChange = functions.firestore.document('/developers/{developerId}')
+    .onUpdate( (change) =>{
+        console.log(change.before.data());
+        console.log(change.after.data());
+        if(change.before.data().imageUrl !== change.after.data().imageUrl ){
+            console.log('image has changed')
+        const batch = db.batch();
+        return db.collection('projects').where('devHandle', '==', change.before.data().handle).get()
+            .then(data => {
+                data.forEach(doc => {
+                    const project = db.doc(`/projects/${doc.id}`)
+                    batch.update(project, { imageUrl: change.after.data().imageUrl });
+                })
+                    return batch.commit();
+            })
+        }
+    });
 
+exports.onProjectDelete = functions.firestore.document('/projects/{projectId}').onDelete(
+    (snapshot, context) => {
+         const batch = db.batch();
+         return db.collection('suggestions').where('projectId', '==', projectId ).get()
+            .then(data => {
+                data.forEach(doc => {
+                    const suggestion = db.doc(`/suggestions/${doc.id}`)
+                    batch.delete(suggestion)
+                })
+                return db.collection('contributors').where('projectId', '==', projectId).get()
+            })
+            .then(data => {
+                data.forEach(doc => {
+                    const contributor = db.doc(`/contributors/${doc.id}`);
+                    batch.delete(contributor);
+                })
+                return db.collection('notifications').where('projectId', '==', projectId ).get()
+            })
+            .then(data => {
+                data.forEach(doc => {
+                    const contributor = db.doc(`/notifications/${doc.id}`);
+                    batch.delete(contributor);
+                })
+                return batch.commit();
+            })
+            .catch(err => console.error(err) );
+    }
+)
 
 exports.api = functions.https.onRequest(app);

@@ -1,9 +1,12 @@
 create project
-
 {
-	"title": "trash app project",
-	"devHandle": "dev1"
+	"title": "Kids Addiction",
+	"overview": "This project will improve the life of kids"
+	"devHandle": "dev1",
+	"help": "Help me with fetching kids data",
+	"gitLink": "https://github.com/Ricardo-Paul/developers-projects/commits/master"
 }
+
 
 {
 	"email": "dev4@gmail.com",
@@ -37,7 +40,7 @@ developer
 Project
 	devHandle
 	createdAt
-	Title
+	title
 
 	Overview
 	Help
