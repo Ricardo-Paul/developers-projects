@@ -105,6 +105,21 @@ exports.signup =  (req, res) => {
             data.forEach(doc => {
                 devAccountDetails.contributors.push(doc.data())
             });
+            return  db.collection('notifications').where('recipient', '==', req.developer.handle).limit(10).get();
+        })
+        .then(data => {
+            devAccountDetails.notifications = [];
+            data.forEach(doc => {
+                devAccountDetails.notifications.push({
+                    recipient: doc.data().recipient,
+                    sender: doc.data().sender,
+                    createdAt: doc.data().createdAt,
+                    screamId: doc.data().screamId,
+                    type: doc.data().type,
+                    read: doc.data().read,
+                    notificationId: doc.id
+                })
+            });
             return res.json(devAccountDetails);
         })
         .catch(err => {
